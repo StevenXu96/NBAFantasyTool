@@ -19,6 +19,33 @@ class Search extends React.Component {
         this.clearAll = this.clearAll.bind(this);
     }
 
+    find_player(index){
+        axios.get('https://www.balldontlie.io/api/v1/players?search=' + index + '&page=1')
+        .then(response => {
+            if (response.data.data.length > 0) {
+                const list_of_players = [];
+                response.data.data.map(player =>
+                    list_of_players.push([player.first_name, player.last_name, player.team.abbreviation, player.id])
+                )
+                this.setState({
+                    players: list_of_players
+                })
+            }
+        })
+    }
+
+    binary_search_player(array, low, high, info){
+        mid = (low + high)/ 2;
+        if (array[mid].name === info){
+            return this.find_player(array[mid].index);
+        }
+        if (array[mid].name[0] > info){
+            return this.binary_search_player(array, 0, mid - 1, info)
+        }
+
+        return this.binary_search_player(array, mid + 1, high, info)
+    }
+
     handleChange(event) {
         const { name, value } = event.target;
         this.setState({
@@ -26,18 +53,10 @@ class Search extends React.Component {
         })
         const info = this.state.name;
         if (this.state.name !== "") {
-            axios.get('https://www.balldontlie.io/api/v1/players?search=' + info + '&page=1')
-                .then(response => {
-                    if (response.data.data.length > 0) {
-                        const list_of_players = [];
-                        response.data.data.map(player =>
-                            list_of_players.push([player.first_name, player.last_name, player.team.abbreviation, player.id])
-                        )
-                        this.setState({
-                            players: list_of_players
-                        })
-                    }
-                })
+            array = [];
+            axios.get('https://www.balldontlie.io/api/v1/all_players')
+            .then(response => array = response)
+            this.binary_search_player(array, 0, array.len(), info);
         } else {
             this.setState({
                 players: []
